@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, json, redirect, url_for
 import requests
+#import datetime
 
 app = Flask(__name__,template_folder="templates")
 app.config['SECRET_KEY'] = '12345'
@@ -31,7 +32,7 @@ def signup():
         resp = (req.json())
         message = resp['message']
         if req.status_code == 200:
-            return redirect(url_for('index'))
+            return redirect(url_for('verification'))
 
         return render_template('index.html', message=message)
 
@@ -47,6 +48,29 @@ def login():
         data = json.dumps({'email' : email, 'password' : password})
         req = requests.post("http://127.0.0.1:5001/engine/login", data=data, headers=headers)
 
+        resp = (req.json())
+        message = resp['message']
+        if req.status_code == 200:
+            return redirect(url_for('index'))
+
+        return render_template('index.html', message=message)
+    
+@app.route('/verification', methods=['GET', 'POST'])
+def verification():
+    if request.method == 'GET':
+      return render_template('verification.html')
+    else:
+        cardnumber=request.form['cardnumber']
+        clientname = request.form['clientname']
+        #expirydate = datetime.datetime.strptime(expirydate, '%m/%d/%Y')
+        #expirydate_iso = expirydate.isoformat()
+        expirydate=request.form['expirydate']
+        securitycode=request.form['securitycode']
+
+        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+        data = json.dumps({'cardnumber' : cardnumber, 'clientname' : clientname, 'expirydate' : expirydate, 'securitycode' : securitycode})
+
+        req = requests.post("http://127.0.0.1:5001/engine/verification" , data = data, headers = headers)
         resp = (req.json())
         message = resp['message']
         if req.status_code == 200:

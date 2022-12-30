@@ -1,0 +1,52 @@
+{% extends "index.html" %}
+<title>{% block title %}Verification{% endblock %}</title>
+{% block content %} 
+
+     <form method="POST">
+        <h3 align="center">Verification</h3>
+        <div class="form-group">
+            <label for="cardnumber">Number</label>
+            <input
+                type="text"
+                class="form-control"
+                id="cardnumber"
+                name="cardnumber"
+                placeholder="Enter number"
+              />
+            </div>
+            <div class="form-group">
+                <label for="clientname">Client Name</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="clientname"
+                    name="clientname"
+                    placeholder="Enter client name"
+                  />
+            </div>
+            <div class="form-group">
+              <label for="expirydate">Date</label>
+              <input
+                type="date" min="2022-12-27"
+                class="form-control"
+                id="expirydate"
+                name="expirydate"
+                placeholder="Enter date"
+              />
+            </div>
+            <div class="form-group">
+              <label for="securitycode">Security Code</label>
+              <input
+                type="password"
+                class="form-control"
+                id="securitycode"
+                name="securitycode"
+                placeholder="Enter security code"
+              />
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+    </div>
+</form>
+{% endblock %}

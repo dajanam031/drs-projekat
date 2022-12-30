@@ -1,6 +1,6 @@
 from flask import Blueprint
 import flask
-from database.models import User, Session, engine
+from database.models import User,Card, Session, engine
 from werkzeug.security import check_password_hash, generate_password_hash
 
 user_blueprint = Blueprint('user_blueprint', __name__)
@@ -59,3 +59,32 @@ def login():
     else:
         err = {'message' : 'User with this email does not exists.'}, 400
         return err 
+    
+@user_blueprint.route('/verification', methods=['POST'])
+def verification():
+    data = flask.request.json
+    cardnumber=data['cardnumber']
+    clientname = data['clientname']
+    expirydate=data['expirydate']
+    securitycode=data['securitycode']
+
+    localSession = Session(bind=engine)
+  
+    existing_cardnumber = localSession.query(Card).filter(Card.cardnumber == cardnumber).first()
+    if existing_cardnumber:
+        err = {'message' : 'Card with that number already exists.'}, 400
+        return err
+
+    new_card = Card(cardnumber=cardnumber, clientname=clientname, expirydate=expirydate,
+    securitycode=securitycode)
+
+    localSession.add(new_card)
+    localSession.commit()
+    
+    success = {'message' : 'You are successfully verificated'}, 200
+    return success
+    
+
+
+
+
