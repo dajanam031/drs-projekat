@@ -51,7 +51,8 @@ def login():
     if user:
         if check_password_hash(user.password, password):
         # TODO: postaviti session za ovog kori8snika
-            success = {'message' : 'You are logged in'}, 200
+            success = {'firstname' : user.firstname,'lastname': user.lastname,'address': user.address,'city':user.city,
+            'country':user.country,'phoneNum':user.phoneNumber,'email':user.email,'password':user.password}, 200
             return success
         else:
             err = {'message' : 'Incorrect password'}, 400 
@@ -59,6 +60,41 @@ def login():
     else:
         err = {'message' : 'User with this email does not exists.'}, 400
         return err 
+
+
+@user_blueprint.route('/profile',methods=['POST'])
+def profile():
+    data=flask.request.json
+    firstname = data['firstname']
+    lastname = data['lastname']
+    address = data['address']
+    city = data['city']
+    country = data['country']
+    phoneNum = data['phoneNum']
+    Email = data['email']
+    password = data['password']
+
+    localSession = Session(bind=engine)
+
+   # existing_email = localSession.query(User).filter(User.email == Email).first()
+    #if existing_email:
+     #   err = {'message' : 'User with that email already exists.'}, 400
+     #   return err
+
+    user_to_update=localSession.query(User).filter(User.email==Email).first()
+    user_to_update.firstname=firstname
+    user_to_update.lastname=lastname
+    user_to_update.address=address
+    user_to_update.city=city
+    user_to_update.country=country
+    user_to_update.phoneNumber=phoneNum
+    user_to_update.email=Email
+    user_to_update.password=generate_password_hash(password, method='sha256')
+    localSession.commit()
+  
+    success = {'message' : 'You successfully edited your profile'}, 200
+
+    return success
     
 @user_blueprint.route('/verification', methods=['POST'])
 def verification():

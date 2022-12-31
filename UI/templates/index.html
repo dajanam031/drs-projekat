@@ -30,8 +30,14 @@
       </button>
       <div class="collapse navbar-collapse" id="navbar">
         <div class="navbar-nav">
-          <a class="nav-item nav-link" href="/signup">Sign Up</a>
-          <a class="nav-item nav-link" href="/login">Login</a>
+         
+          {%if session['user'] %}
+            <a class="nav-item nav-link" href="/profile">Profile</a>
+            <a class="nav-item nav-link" href="/logout">Logout</a>
+          {%else%}
+            <a class="nav-item nav-link" href="/signup">Sign Up</a>
+            <a class="nav-item nav-link" href="/login">Login</a>
+          {%endif%}
         </div>
       </div>
     </nav>
