@@ -101,12 +101,13 @@ def verification():
     localSession = Session(bind=engine)
 
     user_to_verify = localSession.query(User).filter(User.email==user_email).first()
-    user_to_verify.verified = True
-
+    
     existing_cardnumber = localSession.query(Card).filter(Card.cardnumber == cardnumber).first()
     if existing_cardnumber:
         err = {'message' : 'Card with that number already exists.'}, 400
         return err
+
+    user_to_verify.verified = True
 
     new_card = Card(cardnumber=cardnumber, clientname=clientname, expirydate=expirydate,
     securitycode=securitycode, user_id = user_to_verify.id)
