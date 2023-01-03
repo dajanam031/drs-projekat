@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link
       rel="stylesheet"
@@ -18,11 +18,11 @@
     <title>{% block title %}Index{% endblock %}</title>
   </head>
   <body>
+    {% set user=session['user']%}
     {{message}}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <button
         class="navbar-toggler"
-        type="button"
         data-toggle="collapse"
         data-target="#navbar"
       >
@@ -31,8 +31,15 @@
       <div class="collapse navbar-collapse" id="navbar">
         <div class="navbar-nav">
          
-          {%if session['user'] %}
+          {%if user and user.verified %}
             <a class="nav-item nav-link" href="/profile">Profile</a>
+             <!--ako je verifikovan onda prikazati mogucnost transakcije, zamenu valuta, sortiranje itd ...-->
+             <a class="nav-item nav-link" href="/balance">Pregled stanja</a>
+            <a class="nav-item nav-link" href="/transactions">Transactions</a>
+            <a class="nav-item nav-link" href="/logout">Logout</a>
+          {% elif user %}
+            <a class="nav-item nav-link" href="/profile">Profile</a>
+            <a class="nav-item nav-link" href="/verification">Verification</a>
             <a class="nav-item nav-link" href="/logout">Logout</a>
           {%else%}
             <a class="nav-item nav-link" href="/signup">Sign Up</a>

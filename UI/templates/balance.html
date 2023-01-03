@@ -1,0 +1,6 @@
+{% extends "index.html" %}
+<title>{% block title %}Pregled stanja{% endblock %}</title>
+{% block content %}
+{% set user=session['user']%}
+<h1>Stanje na mom racunu: {{user.balance}} $</h1>
+{% endblock %}

@@ -8,6 +8,7 @@ app.config['SECRET_KEY'] = '12345'
 @app.route('/')
 def index():
     return render_template('index.html')
+    
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -30,9 +31,12 @@ def signup():
 
         req = requests.post("http://127.0.0.1:5001/engine/signup", data = data, headers = headers)
         resp = (req.json())
-        message = resp['message']
+
         if req.status_code == 200:
-            return redirect(url_for('verification'))
+            session['user']=resp
+            return redirect(url_for('index'))
+            
+        message = resp['message']
 
         return render_template('index.html', message=message)
 
@@ -50,12 +54,11 @@ def login():
 
         resp = (req.json())
 
-        
         if req.status_code == 200:
             session['user']=resp
             return redirect(url_for('index'))
-        if req.status_code==400:
-            message = resp['message']
+
+        message = resp['message']
         return render_template('index.html', message=message)
 
 @app.route('/profile',methods=['GET','POST'])
@@ -77,17 +80,21 @@ def profile():
         'country' : country, 'phoneNum' : phoneNum,  'email' : email, 'password': password})
         req = requests.post("http://127.0.0.1:5001/engine/profile", data = data, headers = headers)
         resp=(req.json())
-        message = resp['message']
         if req.status_code == 200:
+            session['user'] = resp
             return redirect(url_for('index'))
 
-        return render_template('index.html', message=message)
+        return render_template('index.html')
     
 @app.route('/verification', methods=['GET', 'POST'])
 def verification():
     if request.method == 'GET':
       return render_template('verification.html')
     else:
+        #TODO:
+        # izvrsiti provere jel cardNumber u formatu 4242 4242 4242 4242 (nzm mora li)
+        # izvrsiti proveru jel securityCode duzine tacno 3 cifre kao i inace kod kartica (isto nzm mora li)
+     
         cardnumber=request.form['cardnumber']
         clientname = request.form['clientname']
         #expirydate = datetime.datetime.strptime(expirydate, '%m/%d/%Y')
@@ -95,16 +102,91 @@ def verification():
         expirydate=request.form['expirydate']
         securitycode=request.form['securitycode']
 
+        
+        email = session['user']['email']
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
-        data = json.dumps({'cardnumber' : cardnumber, 'clientname' : clientname, 'expirydate' : expirydate, 'securitycode' : securitycode})
+        data = json.dumps({'cardnumber' : cardnumber, 'clientname' : clientname, 'expirydate' : expirydate, 'securitycode' : securitycode,
+        'user_email' : email})
 
         req = requests.post("http://127.0.0.1:5001/engine/verification" , data = data, headers = headers)
         resp = (req.json())
-        message = resp['message']
         if req.status_code == 200:
+            session['user'] = resp
             return redirect(url_for('index'))
-
+        
+        message = resp['message']
         return render_template('index.html', message=message)
+
+@app.route('/toAnotherUser', methods=['GET', 'POST'])
+def toAnotherUser():
+    if request.method == 'GET':
+        return render_template('toAnotherUser.html')
+    else:
+        reciever_email = request.form['email']
+        amount = request.form['amount']
+
+        # TODO: proveriti jel submitovana forma sa nekim praznim poljem 
+
+        sender_email = session['user']['email']
+        
+        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+        data = json.dumps({'sender_email' : sender_email, 'reciever_email' : reciever_email, 'amount' : amount})
+        req = requests.post("http://127.0.0.1:5001/engine/sendMoneyToAnotherUser", data=data, headers=headers)
+
+        resp = (req.json())
+
+        if req.status_code == 200:
+            session['user'] = resp # apdejtovanje jer je promenjeno stanje na racunu
+            message = "Transakcija je uspesno izvrsena. Novo stanje mozete videti u PREGLED STANJA."
+            return render_template("toAnotherUser.html", message=message)
+            
+        message = resp['message']
+        return render_template('toAnotherUser.html', message=message)
+
+@app.route('/balance', methods=['GET'])
+def balance():
+    # da oba korisnika mogu videti azurirano stanje odmah
+    email = session['user']['email']
+
+    headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+    data = json.dumps({'email' : email})
+    req = requests.post("http://127.0.0.1:5001/engine/refreshBalance", data=data, headers=headers)
+
+    resp = (req.json())
+    session['user'] = resp
+
+    return render_template('balance.html')
+
+@app.route('/toMyAccount', methods=['GET', 'POST'])
+def toMyAccount():
+    if request.method == 'GET':
+        email = session['user']['email']
+
+        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+        data = json.dumps({'email' : email})
+        req = requests.post("http://127.0.0.1:5001/engine/getCard", data=data, headers=headers)
+        resp = (req.json())
+        cardNum = resp['cardNumber']
+        expDate = resp['expiryDate']
+
+        return render_template('toMyAccount.html', cardNum=cardNum, expDate=expDate)
+    else:
+        amount = request.form['amount']
+        email = session['user']['email']
+
+        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+        data = json.dumps({'email' : email, 'amount' : amount})
+        req = requests.post("http://127.0.0.1:5001/engine/transferMoneyToMyAcc", data=data, headers=headers)
+
+        resp = (req.json())
+        mess = resp['message']
+
+        return render_template('toMyAccount.html', mess=mess)
+
+
+@app.route('/transactions')
+def transactions():
+    return render_template('transactions.html') 
 
 @app.route('/logout')
 def logout():
