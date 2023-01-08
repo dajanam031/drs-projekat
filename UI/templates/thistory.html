@@ -1,0 +1,40 @@
+{% extends "index.html" %}
+<title>{% block title %}Istorija transakcija{% endblock %}</title>
+{% block content %}
+<h1>Istorija transakcija</h1>
+{{mess}}
+<ul>
+    {% if not transactions %}
+        <h3>Nemate transakcija</h3>
+    {%else%}
+        {% for tr in transactions %}
+            <li>{{tr}}</li>
+        {%endfor%}
+        <h3>SORTIRANJE</h3>
+        <form action="/thistory" method="GET">
+            <label for="sort_by">Sortiraj po:</label><br>
+            <select id="sort_by" name="sort_by">
+              <option value="amountAsc">Kolicini novca rastuce</option>
+              <option value="amountDesc">Kolicini novca opadajuce</option>
+              <option value="senderAZ">Posiljaocu (A-Z)</option>
+              <option value="recieverAZ">Primaocu (A-Z)</option>
+              <option value="senderZA">Posiljaocu (Z-A)</option>
+              <option value="recieverZA">Primaocu (Z-A)</option>
+            </select>
+            <br><br>
+            <input type="submit" value="Submit">
+          </form>
+          <h3>FILTRIRANJE</h3>
+          <form action="/thistory" method="GET">
+            <label for="filter_by">Filtriraj po:</label><br>
+            <label>Kolicini novca:</label>
+            <input type="text" name="amount" id="amount">
+            <label>Posiljaocu:</label>
+            <input type="text" name="sender" id="sender">
+            <label>Primaocu:</label>
+            <input type="text" name="reciever" id="reciever">
+            <button type="submit">Filter</button>
+          </form>
+    {%endif%}
+</ul>
+{% endblock %}

@@ -1,8 +1,9 @@
-from flask import Blueprint
+from operator import or_, and_
+from flask import Blueprint, jsonify
 import flask
-from database.models import User,Card, Session, engine
+from database.models import User, Card, Transaction, Session, engine
 from werkzeug.security import check_password_hash, generate_password_hash
-from web3.auto import w3
+import sha3
 import random
 import json
 
@@ -34,7 +35,7 @@ def signup():
     localSession.add(new_user)
     localSession.commit()
 
-    return updateUserInSession(new_user)
+    return updateUserInSession(new_user, localSession)
 
 @user_blueprint.route('/login', methods=['POST'])
 def login():
@@ -46,7 +47,7 @@ def login():
     user = localSession.query(User).filter(User.email == email).first()
     if user:
         if check_password_hash(user.password, password):
-            return updateUserInSession(user)
+            return updateUserInSession(user, localSession)
         else:
             err = {'message' : 'Incorrect password'}, 400 
             return err
@@ -87,7 +88,7 @@ def profile():
     user_to_update.password=generate_password_hash(password, method='sha256')
     localSession.commit()
   
-    return updateUserInSession(user_to_update) # pamtile su se izmene samo u bazi
+    return updateUserInSession(user_to_update, localSession) # pamtile su se izmene samo u bazi
     
 @user_blueprint.route('/verification', methods=['POST'])
 def verification():
@@ -116,7 +117,7 @@ def verification():
 
     localSession.add(new_card)
     localSession.commit()
-    return updateUserInSession(user_to_verify)
+    return updateUserInSession(user_to_verify, localSession)
 
 @user_blueprint.route('/sendMoneyToAnotherUser', methods=['POST'])
 def sendMoneyToAnotherUser():
@@ -143,22 +144,20 @@ def sendMoneyToAnotherUser():
         err = {'message' : 'Nemate dovoljno sredstava. Transakcija otkazana.'}, 400
         return err
     else:
+        keccak256 = sha3.keccak_256()
+        hashString = (sender_email + reciever_email + str(amount) + str(random.randint(0,1000))).encode('ascii')
+        keccak256.update(hashString)
 
-        # TODO: zapamtiti transakciju u bazi, treba da sadrzi hash string (keccak256 fja) u kom se nalaze
-        # sender, reciever, iznos, random int
-
-        # transaction = {'sender' : sender_email, 'reciever' : reciever_email,
-        #                 'amount' : amount, 'randint' : random.randint(1, 10000)}
-        # json_string = json.dumps(transaction)
-
-        # hash = w3.keccak(text=json_string)
+        new_transaction = Transaction(transaction_hash=keccak256.hexdigest(), 
+        sender=sender_email, reciever=reciever_email, amount=amount)
+        localSession.add(new_transaction)
         
         reciever.balance += float(amount)
         sender.balance -= float(amount)
         
         localSession.commit()
 
-        return updateUserInSession(sender)
+        return updateUserInSession(sender, localSession)
 
 @user_blueprint.route('/refreshBalance', methods=['POST'])
 def refreshBalance():
@@ -168,7 +167,7 @@ def refreshBalance():
     localSession = Session(bind=engine)
     user = localSession.query(User).filter(User.email==email).first()
 
-    return updateUserInSession(user)
+    return updateUserInSession(user, localSession)
     
 @user_blueprint.route('/transferMoneyToMyAcc', methods=['POST'])
 def transferMoneyToMyAcc():
@@ -182,6 +181,7 @@ def transferMoneyToMyAcc():
     user.balance += float(amount)
 
     localSession.commit()
+    localSession.close()
 
     success = {'message' : 'Prenos novca je uspesno izvrsen. Novo stanje mozete proveriti u PREGLED STANJA.'}
 
@@ -195,18 +195,258 @@ def getCard():
     localSession = Session(bind=engine)
     user = localSession.query(User).filter(User.email==email).first()
     card = localSession.query(Card).filter(Card.user_id==user.id).first()
+    localSession.close()
 
     resp = {'cardNumber' : card.cardnumber, 'expiryDate' : card.expirydate}
 
     return resp
 
-################## POMOCNE FUNKCIJE #####################
+@user_blueprint.route('/transactionsHistory', methods=['POST'])
+def transactionsHistory():
+    data = flask.request.json
+    email = data['email']
+    paramsSort = data['paramsSort']
+    paramsFilter = data['paramsFilter']
 
-def updateUserInSession(user):
+    if not paramsSort and not paramsFilter: # bez parametara, samo se vracaju transakcije
+        return getTransactions(email)
+    elif paramsSort:
+        return sortTransactions(email, paramsSort) 
+    elif paramsFilter:
+        return filterTransactions(paramsFilter, email)
+    else:
+        resp = []
+        return resp
+
+
+############################################ POMOCNE FUNKCIJE #########################################################
+
+def updateUserInSession(user, session):
     success = {'firstname' : user.firstname,'lastname': user.lastname,'address': user.address,'city':user.city,
         'country':user.country,'phoneNum':user.phoneNumber,'email':user.email,'password':user.password,
         'balance' : user.balance, 'verified' : user.verified}, 200
+    session.close()
     return success
+
+def printTransaction(transactions):
+    # možda napraviti drugaciji ispis
+    resp = []
+    for tr in transactions:
+        transaction = "SENDER: " + tr.sender + " , " + "RECIEVER: " + tr.reciever + " , " + "AMOUNT: " + str(tr.amount) + "$"
+        resp.append(transaction)
+    return jsonify(resp)
+
+def getTransactions(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+
+############################################### FUNKCIJE SORTIRANJA ####################################################
+
+def sortTransactions(email, paramsSort):
+    if paramsSort == 'amountAsc': 
+        return sortbyAmountAsc(email)
+    elif paramsSort == 'amountDesc': 
+        return sortbyAmountDesc(email)
+    elif paramsSort == 'senderAZ':
+        return sortbySenderAZ(email)
+    elif paramsSort == 'senderZA':
+        return sortbySenderZA(email)
+    elif paramsSort == 'recieverAZ':
+        return sortbyRecieverAZ(email)
+    elif paramsSort == 'recieverZA':
+        return sortbyRecieverZA(email)
+
+def sortbyAmountAsc(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.amount)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def sortbyAmountDesc(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.amount.desc())
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def sortbySenderAZ(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.sender)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def sortbySenderZA(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.sender.desc())
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def sortbyRecieverZA(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.reciever.desc())
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def sortbyRecieverAZ(email):
+    localSession = Session(bind=engine)
+    transactions = (
+            localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .order_by(Transaction.reciever)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+
+######################################################################################################################
+
+#################################### FUNKCIJE FILTRIRANJA ############################################################
+
+def filterTransactions(paramsFilter, email):
+    amountFilter = paramsFilter['amount'].strip()
+    senderFilter = paramsFilter['sender'].strip()
+    recieverFilter = paramsFilter['reciever'].strip()
+
+    if len(amountFilter) and len(senderFilter) and len(recieverFilter):
+        return filterByAllParams(senderFilter, recieverFilter, amountFilter, email)
+    
+    elif len(amountFilter) and len(senderFilter) and not len(recieverFilter):
+        return filterByAmountAndSender(amountFilter, senderFilter, email)
+    
+    elif len(amountFilter) and not len(senderFilter) and len(recieverFilter):
+        return filterByAmountAndReciever(amountFilter, recieverFilter, email)
+        
+    elif not len(amountFilter) and len(senderFilter) and len(recieverFilter):
+        return filterBySenderAndReciever(senderFilter, recieverFilter, email)
+        
+    elif len(amountFilter) and not len(senderFilter) and not len(recieverFilter):
+        return filterByAmount(amountFilter, email)
+        
+    elif not len(amountFilter) and len(senderFilter) and not len(recieverFilter):
+        return filterBySender(senderFilter, email)
+        
+    elif not len(amountFilter) and not len(senderFilter) and len(recieverFilter):
+        return filterByReciever(recieverFilter, email)
+    else:
+        return getTransactions(email)
+        
+
+def filterByAllParams(senderFilter, recieverFilter, amountFilter, email):
+    # filtriranje po svim parametrima
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterByAmountAndSender(amountFilter, senderFilter, email):
+    # filtriranje po kolicini novca i posiljaocu
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.amount == amountFilter)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterByAmountAndReciever(amountFilter, recieverFilter, email):
+    # filtriranje po kolicini novca i primaocu
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterBySenderAndReciever(senderFilter, recieverFilter, email):
+    # filtriranje po primaocu i posiljaocu
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'))
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterByAmount(amountFilter, email):
+    # filtriranje samo po kolicini novca
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.amount == amountFilter)
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterBySender(senderFilter, email):
+    # filtriranje po posiljaocu
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.sender.like(f'%{senderFilter}%'))
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+
+def filterByReciever(recieverFilter, email):
+    # filtriranje po primaocu
+    localSession = Session(bind=engine)
+    transactions = (
+        localSession.query(Transaction)
+            .filter(or_(Transaction.sender == email, Transaction.reciever == email))
+            .filter(Transaction.reciever.like(f'%{recieverFilter}%'))
+            .all()
+        )
+    localSession.close()
+    return printTransaction(transactions)
+######################################################################################################################
     
 
 

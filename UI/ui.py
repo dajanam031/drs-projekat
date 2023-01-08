@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, json, redirect, url_for,session
+from flask import Flask, flash, render_template, request, json, redirect, url_for,session
 import requests
 #import datetime
 
@@ -124,10 +124,12 @@ def toAnotherUser():
     else:
         reciever_email = request.form['email']
         amount = request.form['amount']
-
-        # TODO: proveriti jel submitovana forma sa nekim praznim poljem 
-
         sender_email = session['user']['email']
+        
+        if not len(reciever_email.strip()) or not len((str(amount)).strip()):
+            flash('Greska! Sva polja moraju biti popunjena')
+            return redirect(url_for('toAnotherUser'))
+            
         
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
         data = json.dumps({'sender_email' : sender_email, 'reciever_email' : reciever_email, 'amount' : amount})
@@ -173,17 +175,36 @@ def toMyAccount():
     else:
         amount = request.form['amount']
         email = session['user']['email']
-
+        
+        amount_str = str(amount).strip()
+        if not len(amount_str): # nista nije uneseno
+            flash('Neispravno unet iznos novca. Pokusajte ponovo')
+            return redirect(url_for('toMyAccount'))
+        
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
         data = json.dumps({'email' : email, 'amount' : amount})
         req = requests.post("http://127.0.0.1:5001/engine/transferMoneyToMyAcc", data=data, headers=headers)
 
         resp = (req.json())
         mess = resp['message']
+        flash(mess)
+        return redirect(url_for('toMyAccount'))
 
-        return render_template('toMyAccount.html', mess=mess)
+@app.route('/thistory', methods=['GET', 'POST'])
+def transactionsHistory():
 
+        paramsSort = request.args.get('sort_by')
+        paramsFilter = request.args
+        email = session['user']['email']
 
+        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
+        data = json.dumps({'email' : email, 'paramsSort' : paramsSort, 'paramsFilter' : paramsFilter})
+        req = requests.post("http://127.0.0.1:5001/engine/transactionsHistory", data=data, headers=headers)
+
+        transactions = (req.json())
+
+        return render_template('thistory.html', transactions=transactions)
+   
 @app.route('/transactions')
 def transactions():
     return render_template('transactions.html') 

@@ -33,6 +33,13 @@ class User(Base):
     verified = Column(Boolean, default=False)
     card = relationship('Card', back_populates='user')
 
+class Transaction(Base):
+    __tablename__ = 'transactions'
+    transaction_hash = Column(String(100), primary_key=True)
+    sender = Column(String(50), nullable=False)
+    reciever = Column(String(50), nullable=False)
+    amount = Column(Float, nullable=False)
+
 
      
 
