@@ -137,10 +137,10 @@ def toAnotherUser():
 
         resp = (req.json())
 
-        if req.status_code == 200:
-            session['user'] = resp # apdejtovanje jer je promenjeno stanje na racunu
-            message = "Transakcija je uspesno izvrsena. Novo stanje mozete videti u PREGLED STANJA."
-            return render_template("toAnotherUser.html", message=message)
+        # if req.status_code == 200:
+        #     session['user'] = resp # apdejtovanje jer je promenjeno stanje na racunu
+        #     message = "Transakcija je uspesno izvrsena. Novo stanje mozete videti u PREGLED STANJA."
+        #     return render_template("toAnotherUser.html", message=message)
             
         message = resp['message']
         return render_template('toAnotherUser.html', message=message)

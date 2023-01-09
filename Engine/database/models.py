@@ -39,6 +39,7 @@ class Transaction(Base):
     sender = Column(String(50), nullable=False)
     reciever = Column(String(50), nullable=False)
     amount = Column(Float, nullable=False)
+    state = Column(String(50), nullable=False)
 
 
      
