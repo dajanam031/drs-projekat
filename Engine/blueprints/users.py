@@ -130,7 +130,7 @@ def sendMoneyToAnotherUser():
     thread = threading.Thread(target=transaction_thread, args=(sender_email, reciever_email, amount))
     thread.start()
 
-    message = {'message' : 'Transaction validation has started ....'}, 400
+    message = {'message' : 'Transaction validation has started ....'}, 200
     
     return  message
 

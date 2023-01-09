@@ -136,11 +136,6 @@ def toAnotherUser():
         req = requests.post("http://127.0.0.1:5001/engine/sendMoneyToAnotherUser", data=data, headers=headers)
 
         resp = (req.json())
-
-        # if req.status_code == 200:
-        #     session['user'] = resp # apdejtovanje jer je promenjeno stanje na racunu
-        #     message = "Transakcija je uspesno izvrsena. Novo stanje mozete videti u PREGLED STANJA."
-        #     return render_template("toAnotherUser.html", message=message)
             
         message = resp['message']
         return render_template('toAnotherUser.html', message=message)
