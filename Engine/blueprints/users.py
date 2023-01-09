@@ -207,7 +207,7 @@ def printTransaction(transactions):
     # možda napraviti drugaciji ispis
     resp = []
     for tr in transactions:
-        transaction = "SENDER: " + tr.sender + " , " + "RECIEVER: " + tr.reciever + " , " + "AMOUNT: " + str(tr.amount) + "$"
+        transaction = "SENDER: " + tr.sender + " , " + "RECIEVER: " + tr.reciever + " , " + "AMOUNT: " + str(tr.amount) + "$" + " , " + tr.state
         resp.append(transaction)
     return jsonify(resp)
 
@@ -216,7 +216,6 @@ def getTransactions(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .all()
         )
     localSession.close()
@@ -224,7 +223,7 @@ def getTransactions(email):
 
 def transaction_thread(sender_email, reciever_email, amount):
     # obrada transakcije, simulirano odredjeno vreme
-    time.sleep(10)
+    
     localSession = Session(bind=engine)
 
     hashString = (sender_email + reciever_email + str(amount) + str(random.randint(0,1000))).encode('ascii')
@@ -234,22 +233,20 @@ def transaction_thread(sender_email, reciever_email, amount):
     new_transaction = Transaction(transaction_hash=keccak256.hexdigest(), 
     sender=sender_email, reciever=reciever_email, amount=amount, state="U OBRADI")
     localSession.add(new_transaction) 
+    localSession.commit()
 
+    time.sleep(15)
     
     reciever = localSession.query(User).filter(User.email==reciever_email).first()
     sender = localSession.query(User).filter(User.email==sender_email).first()
 
     if sender_email == reciever_email:
-        #response = {'message' : 'Nedozvoljeno iniciranje transakcije samom sebi.'}
         new_transaction.state = "ODBIJENO"
     elif not reciever:
-        #response = {'message' : 'Korisnik sa unetim emailom ne postoji. Pokusajte ponovo.'}
         new_transaction.state = "ODBIJENO"
     elif reciever.verified == False:
-        #response = {'message' : 'Korisnik sa unetim emailom nema otvoren crypto racun. Transakcija otkazana.'}
         new_transaction.state = "ODBIJENO"
     elif sender.balance < float(amount):
-        #response = {'message' : 'Nemate dovoljno sredstava. Transakcija otkazana.'}
         new_transaction.state = "ODBIJENO"
     else:
         new_transaction.state = "OBRADJENO"
@@ -281,7 +278,6 @@ def sortbyAmountAsc(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.amount)
             .all()
         )
@@ -293,7 +289,6 @@ def sortbyAmountDesc(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.amount.desc())
             .all()
         )
@@ -305,7 +300,6 @@ def sortbySenderAZ(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.sender)
             .all()
         )
@@ -317,7 +311,6 @@ def sortbySenderZA(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.sender.desc())
             .all()
         )
@@ -329,7 +322,6 @@ def sortbyRecieverZA(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.reciever.desc())
             .all()
         )
@@ -341,7 +333,6 @@ def sortbyRecieverAZ(email):
     transactions = (
             localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .order_by(Transaction.reciever)
             .all()
         )
@@ -388,7 +379,6 @@ def filterByAllParams(senderFilter, recieverFilter, amountFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
@@ -401,7 +391,6 @@ def filterByAmountAndSender(amountFilter, senderFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
@@ -414,7 +403,6 @@ def filterByAmountAndReciever(amountFilter, recieverFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
@@ -427,7 +415,6 @@ def filterBySenderAndReciever(senderFilter, recieverFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'))
             .all()
         )
@@ -440,7 +427,6 @@ def filterByAmount(amountFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.amount == amountFilter)
             .all()
         )
@@ -453,7 +439,6 @@ def filterBySender(senderFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.sender.like(f'%{senderFilter}%'))
             .all()
         )
@@ -466,7 +451,6 @@ def filterByReciever(recieverFilter, email):
     transactions = (
         localSession.query(Transaction)
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
-            .filter(Transaction.state == "OBRADJENO")
             .filter(Transaction.reciever.like(f'%{recieverFilter}%'))
             .all()
         )
