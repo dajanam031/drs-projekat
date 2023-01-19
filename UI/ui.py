@@ -38,7 +38,7 @@ def signup():
             
         message = resp['message']
 
-        return render_template('index.html', message=message)
+        return render_template('signup.html', message=message)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -115,7 +115,7 @@ def verification():
             return redirect(url_for('index'))
         
         message = resp['message']
-        return render_template('index.html', message=message)
+        return render_template('verification.html', message=message)
 
 @app.route('/toAnotherUser', methods=['GET', 'POST'])
 def toAnotherUser():

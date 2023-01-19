@@ -106,7 +106,7 @@ def verification():
     
     existing_cardnumber = localSession.query(Card).filter(Card.cardnumber == cardnumber).first()
     if existing_cardnumber:
-        err = {'message' : 'Card with that number already exists.'}, 400
+        err = {'message' : 'Invalid card number.'}, 400
         return err
 
     user_to_verify.verified = True
@@ -223,7 +223,6 @@ def getTransactions(email):
 
 def transaction_thread(sender_email, reciever_email, amount):
     # obrada transakcije, simulirano odredjeno vreme
-    
     localSession = Session(bind=engine)
 
     hashString = (sender_email + reciever_email + str(amount) + str(random.randint(0,1000))).encode('ascii')
