@@ -1,6 +1,32 @@
-{% extends "index.html" %}
-<title>{% block title %}Pregled stanja{% endblock %}</title>
-{% block content %}
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Login</title>
+  <link rel="stylesheet" href="../static/styles/style.css">
+  </head>
+<body>
 {% set user=session['user']%}
-<h1>Stanje na mom racunu: {{user.balance}} $</h1>
-{% endblock %}
+<div class="banner">
+    <div class="navbar">
+        <ul>
+          {%if user and user.verified %}
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/balance">Pregled stanja</a></li>
+          <li><a href="/transactions">Transactions</a></li>
+          <li><a href="/logout">Logout</a></li>
+          {% elif user %}
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/verification">Verification</a></li>
+          <li><a href="/logout">Logout</a></li>
+          {%else%}
+          <li><a href="/signup">Sign Up</a></li>
+          <li><a href="/login">Login</a></li>
+          {%endif%}
+        </ul>
+      </div>
+    <div class="content">
+        <h1>Stanje na mom racunu: {{user.balance}} $</h1>
+      </div>
+</div>
+</body>
+</html>

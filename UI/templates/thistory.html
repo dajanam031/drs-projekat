@@ -1,8 +1,32 @@
-{% extends "index.html" %}
-<title>{% block title %}Istorija transakcija{% endblock %}</title>
-{% block content %}
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Verification</title>
+  <link rel="stylesheet" href="../static/styles/style.css">
+  </head>
+<body>
+{% set user=session['user']%}
+<div class="banner">
+<p>{{message}}</p>
+  <div class="navbar">
+    <ul>
+        {%if user and user.verified %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/balance">Pregled stanja</a></li>
+      <li><a href="/transactions">Transactions</a></li>
+      <li><a href="/logout">Logout</a></li>
+      {% elif user %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/verification">Verification</a></li>
+      <li><a href="/logout">Logout</a></li>
+      {%else%}
+      <li><a href="/signup">Sign Up</a></li>
+      <li><a href="/login">Login</a></li>
+      {%endif%}
+    </ul>
+  </div>
+  
 <h1>Istorija transakcija</h1>
-{{mess}}
 <ul>
     {% if not transactions %}
         <h3>Nemate transakcija</h3>
@@ -10,7 +34,8 @@
         {% for tr in transactions %}
             <li>{{tr}}</li>
         {%endfor%}
-        <h3>SORTIRANJE</h3>
+        <div class="form-sort">
+          <h1>SORTIRANJE</h1>
         <form action="/thistory" method="GET">
             <label for="sort_by">Sortiraj po:</label><br>
             <select id="sort_by" name="sort_by">
@@ -24,17 +49,23 @@
             <br><br>
             <input type="submit" value="Submit">
           </form>
-          <h3>FILTRIRANJE</h3>
-          <form action="/thistory" method="GET">
-            <label for="filter_by">Filtriraj po:</label><br>
-            <label>Kolicini novca:</label>
-            <input type="text" name="amount" id="amount">
-            <label>Posiljaocu:</label>
-            <input type="text" name="sender" id="sender">
-            <label>Primaocu:</label>
-            <input type="text" name="reciever" id="reciever">
-            <button type="submit">Filter</button>
-          </form>
+        </div>
+        <br/>
+        <div class="form-filter">
+        <h1>FILTRIRANJE</h1>
+        <form action="/thistory" method="GET">
+          <label for="filter_by">Filtriraj po:</label><br>
+          <label>Kolicini novca:</label>
+          <input type="text" name="amount" id="amount">
+          <label>Posiljaocu:</label>
+          <input type="text" name="sender" id="sender">
+          <label>Primaocu:</label>
+          <input type="text" name="reciever" id="reciever">
+          <button type="submit">Filter</button>
+        </form>
+        </div>
     {%endif%}
 </ul>
-{% endblock %}
+</div>
+</body>
+</html>

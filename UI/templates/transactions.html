@@ -1,8 +1,19 @@
-{% extends "index.html" %}
-<title>{% block title %}Transakcije{% endblock %}</title>
-{% block content %}
-
-<a class="nav-item nav-link" href="/toAnotherUser">Transakcija drugom korisniku</a>
-<a class="nav-item nav-link" href="/toMyAccount">Uplata na moj racun</a>
-<a class="nav-item nav-link" href="/thistory">Istorija transakcija</a>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Index</title>
+    <link rel="stylesheet" href="../static/styles/style.css">
+  </head>
+  <body>
+    <div class="banner">
+      <div class="navbar">
+        <ul>
+          <li><a href="/toAnotherUser">Transakcija drugom korisniku</a></li>
+          <li><a href="/toMyAccount">Uplata na moj racun</a></li>
+          <li><a href="/thistory">Istorija transakcija</a></li>
+        </ul>
+      </div>
+    </div>
+  </body>   
+</html>

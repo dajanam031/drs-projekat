@@ -1,20 +1,42 @@
-
-{% extends "index.html" %}
-<title>{% block title %}Transaction to my account{% endblock %}</title>
-{% block content %}
-{% with messages = get_flashed_messages() %}
-   {% if messages %}
-      {% for message in messages %}
-         {{ message }}
-      {% endfor %}
-   {% endif %}
-{% endwith %}
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Transfer to my account</title>
+  <link rel="stylesheet" href="../static/styles/style.css">
+  </head>
+<body>
+{% set user=session['user']%}
+<div class="banner">
+    {% with messages = get_flashed_messages() %}
+       {% if messages %}
+          {% for message in messages %}
+             <p>{{ message }}</p>
+          {% endfor %}
+       {% endif %}
+    {% endwith %}
+  <div class="navbar">
+    <ul>
+        {%if user and user.verified %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/balance">Pregled stanja</a></li>
+      <li><a href="/transactions">Transactions</a></li>
+      <li><a href="/logout">Logout</a></li>
+      {% elif user %}
+      <li><a href="/profile">Profile</a></li>
+      <li><a href="/verification">Verification</a></li>
+      <li><a href="/logout">Logout</a></li>
+      {%else%}
+      <li><a href="/signup">Sign Up</a></li>
+      <li><a href="/login">Login</a></li>
+      {%endif%}
+    </ul>
+  </div>
+  <div class="form">
+    <h1>TRANSFER MONEY TO MY ACCOUNT</h1>
     <form method="POST">
-        <h3 align="center">Uplata novca na moj racun</h3>
         <h4 align="center">Moja kartica:</h4>
         <h6 align="center">Card number: {{cardNum}}</h6>
         <h6 align="center">Expiration date: {{expDate}}</h6>
-        <div class="form-group">
         <label for="amount">Iznos novca za prebacivanje sa kartice:</label>
         <input
             type="number"
@@ -23,8 +45,12 @@
             id="amount"
             name="amount"
             placeholder="Enter amount"
+            required
         />
         <br />
-        <button type="submit" class="btn btn-primary">FINISH</button>
+        <button type="submit">FINISH</button>
     </form>
-{% endblock %}
+  </div>
+</div>
+</body>
+</html>

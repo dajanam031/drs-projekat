@@ -59,7 +59,7 @@ def login():
             return redirect(url_for('index'))
 
         message = resp['message']
-        return render_template('index.html', message=message)
+        return render_template('login.html', message=message)
 
 @app.route('/profile',methods=['GET','POST'])
 def profile():
