@@ -5,6 +5,52 @@
   <link rel="stylesheet" href="../static/styles/style.css">
   </head>
 <body>
+  <!--VALIDACIJE-->
+  <script type="text/javascript">
+    function proveraReg(forma) {
+        if (forma.firstname.value.trim().length === 0) {
+            document.getElementById("firstname").focus();
+            alert("Field firstname cannot be empty!")
+            return false;
+        }
+        else if (forma.lastname.value.trim().length === 0) {
+            document.getElementById("lastname").focus();
+            alert("Field lastname cannot be empty!")
+            return false;
+        }
+        else if (forma.address.value.trim().length === 0) {
+            document.getElementById("address").focus();
+            alert("Field address cannot be empty!")
+            return false;
+        }
+        else if (forma.city.value.trim().length === 0) {
+            document.getElementById("city").focus();
+            alert("Field city cannot be empty!")
+            return false;
+        }
+        else if (forma.country.value.trim().length === 0) {
+            document.getElementById("country").focus();
+            alert("Field country cannot be empty!")
+            return false;
+        }
+        else if (forma.phone.value.trim().length === 0) {
+            document.getElementById("phone").focus();
+            alert("Field phone cannot be empty!")
+            return false;
+        }
+        else if (!isValidPhoneNum(forma.phone.value.trim())){
+          document.getElementById("phone").focus();
+          alert("Invalid phone number!")
+          return false;
+        }
+    }
+
+  function isValidPhoneNum(str) {
+    // validan broj je onaj koji moze poceti sa + pa neki brojevi ali i ne mora +
+  return /^(\+?[0-9]+)$/.test(str);
+}
+</script>
+
 {% set user=session['user']%}
 <div class="banner">
   <p>{{message}}</p>
@@ -27,7 +73,7 @@
   </div>
   <div class="form">
     <h1>SIGN UP</h1>
-     <form method="POST">
+     <form method="POST" onsubmit="return proveraReg(this)">
             <label for="firstname">First Name</label>
             <input
                 type="text"
@@ -101,7 +147,7 @@
                 required
               />
             <br />
-            <button type="submit">Submit</button>
+            <button type="submit" onclick="return validateForm()">Submit</button>
           </form>
     </div>
 </form>

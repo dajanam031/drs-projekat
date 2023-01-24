@@ -5,6 +5,22 @@
   <link rel="stylesheet" href="../static/styles/style.css">
   </head>
 <body>
+    <!--VALIDACIJE-->
+    <script type="text/javascript">
+      function proveraVer(forma) {
+          if (forma.cardnumber.value.trim().length === 0) {
+              document.getElementById("cardnumber").focus();
+              alert("Field cardnumber cannot be empty!")
+              return false;
+          }
+          else if (forma.clientname.value.trim().length === 0) {
+              document.getElementById("clientname").focus();
+              alert("Field clientname cannot be empty!")
+              return false;
+          }
+      }
+  </script>
+  <!--VALIDACIJE-->
 {% set user=session['user']%}
 <div class="banner">
   <p>{{message}}</p>
@@ -27,7 +43,7 @@
   </div>
   <div class="form">
     <h1>VERIFICATION</h1>
-     <form method="POST">
+     <form method="POST" onsubmit="return proveraVer(this)">
             <label for="cardnumber">Number</label>
             <input
                 type="text"

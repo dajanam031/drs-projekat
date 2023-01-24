@@ -147,11 +147,6 @@ def toAnotherUser():
         amount = request.form['amount']
         sender_email = session['user']['email']
         
-        if not len(reciever_email.strip()) or not len((str(amount)).strip()):
-            flash('Greska! Sva polja moraju biti popunjena')
-            return redirect(url_for('toAnotherUser'))
-            
-        
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
         data = json.dumps({'sender_email' : sender_email, 'reciever_email' : reciever_email, 'amount' : amount})
         req = requests.post("http://127.0.0.1:5001/engine/sendMoneyToAnotherUser", data=data, headers=headers)
