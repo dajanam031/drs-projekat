@@ -1,9 +1,26 @@
+from functools import wraps
 from flask import Flask, flash, render_template, request, json, redirect, url_for,session
 import requests
 #import datetime
 
 app = Flask(__name__,template_folder="templates")
 app.config['SECRET_KEY'] = '12345'
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+def verified_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session['user']['verified']:
+            return redirect('/verification')
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -62,6 +79,7 @@ def login():
         return render_template('login.html', message=message)
 
 @app.route('/profile',methods=['GET','POST'])
+@login_required
 def profile():
     if request.method=='GET':
         return render_template('profile.html')
@@ -87,6 +105,7 @@ def profile():
         return render_template('index.html')
     
 @app.route('/verification', methods=['GET', 'POST'])
+@login_required
 def verification():
     if request.method == 'GET':
       return render_template('verification.html')
@@ -118,6 +137,8 @@ def verification():
         return render_template('verification.html', message=message)
 
 @app.route('/toAnotherUser', methods=['GET', 'POST'])
+@login_required
+@verified_required
 def toAnotherUser():
     if request.method == 'GET':
         return render_template('toAnotherUser.html')
@@ -141,6 +162,8 @@ def toAnotherUser():
         return render_template('toAnotherUser.html', message=message)
 
 @app.route('/balance', methods=['GET'])
+@login_required
+@verified_required
 def balance():
     # da oba korisnika mogu videti azurirano stanje odmah
     email = session['user']['email']
@@ -155,6 +178,8 @@ def balance():
     return render_template('balance.html')
 
 @app.route('/toMyAccount', methods=['GET', 'POST'])
+@login_required
+@verified_required
 def toMyAccount():
     if request.method == 'GET':
         email = session['user']['email']
@@ -186,6 +211,8 @@ def toMyAccount():
         return redirect(url_for('toMyAccount'))
 
 @app.route('/thistory', methods=['GET', 'POST'])
+@login_required
+@verified_required
 def transactionsHistory():
 
         paramsSort = request.args.get('sort_by')
@@ -201,10 +228,13 @@ def transactionsHistory():
         return render_template('thistory.html', transactions=transactions)
    
 @app.route('/transactions')
+@login_required
+@verified_required
 def transactions():
     return render_template('transactions.html') 
 
 @app.route('/logout')
+@login_required
 def logout():
     session.clear()
     return  redirect(url_for('index'))
