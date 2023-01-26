@@ -214,3 +214,33 @@ h4, h6{
     border-radius: 10px;
     border: 0;
 }
+
+
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+}
+.container .coin-price{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 3px #ccc;
+    margin: 7px;
+}
+.container .coin-price .log{
+    width: 70px;
+    margin-right: 10px;
+}
+.container .coin-price .log img{
+    width: 100%;
+}
+.container .coin-price div{
+    display: block;
+}
+.container .coin-price div h1{
+    font-size: 20px;
+}

@@ -3,6 +3,8 @@
   <head>
   <title>Balance</title>
   <link rel="stylesheet" href="../static/styles/style.css">
+
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
 <body>
 {% set user=session['user']%}
@@ -26,7 +28,47 @@
       </div>
     <div class="content">
         <h1>Stanje na mom racunu: {{user.balance}} $</h1>
-      </div>
+    </div>
+    <div class="container">
+        <div class="coin-price">
+            <div class="log">
+                <img src="../static/styles/bitcoin-btc-logo.png">
+            </div>
+            <div>
+                <h1>Bitcoin</h1>
+                <h1>$<span id="bitcoin"></span></h1>
+            </div>
+        </div>
+        <div class="coin-price">
+            <div class="log">
+                <img src="../static/styles/litecoin-ltc-logo.png">
+            </div>
+            <div>
+                <h1>Litecoin</h1>
+                <h1>$<span id="litecoin"></span></h1>
+            </div>
+        </div>
+        <div class="coin-price">
+            <div class="log">
+                <img src="../static/styles/dogecoin-doge-logo.png">
+            </div>
+            <div>
+                <h1>Dogecoin</h1>
+                <h1>$<span id="dogecoin"></span></h1>
+            </div>
+        </div>
+        <div class="coin-price">
+            <div class="log">
+                <img src="../static/styles/ethereum-eth-logo.png">
+            </div>
+            <div>
+                <h1>Ethereum</h1>
+                <h1>$<span id="ethereum"></span></h1>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="../static/javascript/live.js"></script>
 </body>
 </html>
