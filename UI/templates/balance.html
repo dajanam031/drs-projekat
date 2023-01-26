@@ -26,6 +26,24 @@
           {%endif%}
         </ul>
       </div>
+      <div class="form-change">
+        <h1>ZAMENA</h1>
+      <form action="/balance" method="GET">
+          <label for="change_currency">Zameni valutu:</label><br>
+          <select id="change_currency" name="change_currency">
+            <option value="bitcoin">BITCOIN</option>
+            <option value="dogecoin">DOGECOIN</option>
+            <option value="litecoin">LITECOIN</option>
+            <option value="ethereum">ETHEREUM</option>
+          </select>
+          <br><br>
+          <label for="change_currency">Unesi iznos:</label><br>
+          <input type="text" name="amount" id="amount">
+          <br><br>
+          <button type="submit">Zameni</button>
+        </form>
+      </div>
+      <br/>
     <div class="content">
         <h1>Stanje na mom racunu: {{user.balance}} $</h1>
     </div>

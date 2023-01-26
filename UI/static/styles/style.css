@@ -81,7 +81,7 @@
 
 .content h1{
     font-size: 50px;
-    margin-top: 80px;
+    margin-top: -100px;
 }
 
 .form{
@@ -211,6 +211,47 @@ h4, h6{
     margin: 15px 0;
     padding: 10px 15px;
     width: 50%;
+    border-radius: 10px;
+    border: 0;
+}
+
+.form-change{
+    width: 350px;
+    top: 70%;
+    left: 20%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    color: #fff;
+
+}
+
+.form-change h1{
+    font-size: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    margin: 20px 0;
+}
+
+.form-change label{
+    font-size: 16px;
+    margin: 15px 0;
+}
+
+.form-change input{
+    font-size: 16px;
+    width: 100%;
+    padding: 10px 10px;
+    border: 0;
+    outline: none;
+    border-radius: 5px;
+}
+
+.form-change button{
+    font-size: 12px;
+    font-weight: bold;
+    margin: 15px 0;
+    padding: 10px 15px;
+    width: 106%;
     border-radius: 10px;
     border: 0;
 }
