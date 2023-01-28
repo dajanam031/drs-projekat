@@ -233,5 +233,23 @@ def transactions():
 def logout():
     session.clear()
     return  redirect(url_for('index'))
+@app.route('/changeCurrency',methods=['POST'])
+def changeCurrency():
+    currency=request.form['change_currency']
+    amount=request.form['amount']
+    email=session['user']['email']
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    data = json.dumps({'currency': currency,'amount':amount,'email':email})
+    req = requests.post("http://127.0.0.1:5001/engine/changeCurrency", data=data, headers=headers)
+    balance=(req.json())
+    if req.status_code==400:
+        message=balance['message']
+        return  render_template('balance.html',message=message)
+
+    session['user']=balance
+    return redirect(url_for('balance'))
+
+
+
 
 app.run(port=5000, debug=True)

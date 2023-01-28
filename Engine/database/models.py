@@ -30,6 +30,10 @@ class User(Base):
     country = Column(String(50), nullable=False)
     phoneNumber = Column(String(50), nullable=False)
     balance =  Column(Float, nullable=False)
+    balance_btc= Column(Float,default=0)
+    balance_ltc=Column(Float,default=0)
+    balance_doge=Column(Float,default=0)
+    balance_eth=Column(Float,default=0)
     verified = Column(Boolean, default=False)
     card = relationship('Card', back_populates='user')
 

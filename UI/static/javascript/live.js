@@ -17,3 +17,6 @@ $.ajax(liveprice).done(function (response){
             eth.innerHTML = response.ethereum.usd;
             doge.innerHTML = response.dogecoin.usd;
 });
+
+
+

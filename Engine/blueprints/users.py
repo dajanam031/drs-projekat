@@ -1,4 +1,6 @@
 from operator import or_, and_
+
+import requests
 from flask import Blueprint, jsonify
 import flask
 from database.models import User, Card, Transaction, Session, engine
@@ -193,13 +195,59 @@ def transactionsHistory():
         resp = []
         return resp
 
+@user_blueprint.route('/changeCurrency',methods=['POST'])
+def changeCurrency():
+    data=flask.request.json
+
+    email=data['email']
+    currency=data['currency']
+    amount=float(data['amount'])
+    prices=livePrices()
+
+    localSession=Session(bind=engine)
+    user=localSession.query(User).filter(User.email==email).first()
+    if(amount>user.balance):
+         err = {'message' : 'You dont have enough $$$'}, 400
+         return err
+    else:
+        if(currency=='bitcoin'):
+            user.balance-=amount
+            user.balance_btc+=amount/float(prices['bitcoin']['usd'])
+        elif(currency=='litecoin'):
+            user.balance-=amount
+            user.balance_ltc+=amount/float(prices['litecoin']['usd'])
+        elif(currency=='dogecoin'):
+            user.balance-=amount
+            user.balance_doge+=amount/float(prices['dogecoin']['usd'])
+        elif(currency=='ethereum'):
+            user.balance-=amount
+            user.balance_eth+=amount/float(prices['ethereum']['usd'])
+        success = {'firstname': user.firstname, 'lastname': user.lastname, 'address': user.address, 'city': user.city,
+                   'country': user.country, 'phoneNum': user.phoneNumber, 'email': user.email,
+                   'password': user.password,
+                   'balance': user.balance, 'verified': user.verified,'balance_btc':user.balance_btc,'balance_ltc':user.balance_ltc,
+                   'balance_doge':user.balance_doge,'balance_eth':user.balance_eth}, 200
+        localSession.commit()
+        localSession.close()
+        return  success
+
+
+
+
+
 
 ############################################ POMOCNE FUNKCIJE #########################################################
-
+def livePrices():
+    url='https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Cdogecoin%2Cethereum%2Clitecoin&vs_currencies=usd'
+    prices=requests.get(url).json()
+    return prices
 def updateUserInSession(user, session):
-    success = {'firstname' : user.firstname,'lastname': user.lastname,'address': user.address,'city':user.city,
-        'country':user.country,'phoneNum':user.phoneNumber,'email':user.email,'password':user.password,
-        'balance' : user.balance, 'verified' : user.verified}, 200
+    success = {'firstname': user.firstname, 'lastname': user.lastname, 'address': user.address, 'city': user.city,
+               'country': user.country, 'phoneNum': user.phoneNumber, 'email': user.email,
+               'password': user.password,
+               'balance': user.balance, 'verified': user.verified, 'balance_btc': user.balance_btc,
+               'balance_ltc': user.balance_ltc,
+               'balance_doge': user.balance_doge, 'balance_eth': user.balance_eth}, 200
     session.close()
     return success
 

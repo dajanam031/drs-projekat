@@ -28,7 +28,7 @@
       </div>
       <div class="form-change">
         <h1>ZAMENA</h1>
-      <form action="/balance" method="GET">
+      <form action="/changeCurrency" method="POST">
           <label for="change_currency">Zameni valutu:</label><br>
           <select id="change_currency" name="change_currency">
             <option value="bitcoin">BITCOIN</option>
@@ -38,15 +38,12 @@
           </select>
           <br><br>
           <label for="change_currency">Unesi iznos:</label><br>
-          <input type="text" name="amount" id="amount">
+          <input type="text" name="amount" id="amount" value="0">
           <br><br>
           <button type="submit">Zameni</button>
         </form>
       </div>
       <br/>
-    <div class="content">
-        <h1>Stanje na mom racunu: {{user.balance}} $</h1>
-    </div>
     <div class="container">
         <div class="coin-price">
             <div class="log">
@@ -85,6 +82,43 @@
             </div>
         </div>
     </div>
+    <div>
+        <table>
+        <thead>
+                <tr>
+                    <th>Currency</th>
+                    <th>Balance</th>
+                </tr>
+        </thead>
+        <tbody>
+            {% if message %}
+                <td class="error">Error</td>
+                <td class="error">{{ message }}</td>
+            {% endif %}
+            <tr>
+                <td>Dollars</td>
+                <td>${{ user.balance }}</td>
+            </tr>
+            <tr>
+                <td>Bitcoin</td>
+                <td>BTC {{ user.balance_btc }}</td>
+            </tr>
+            <tr>
+                <td>Litecoin</td>
+                <td>LTC {{ user.balance_ltc }}</td>
+            </tr>
+            <tr>
+                <td>Dogecoin</td>
+                <td>DOGE {{ user.balance_doge }}</td>
+            </tr>
+            <tr>
+                <td>Ethereum</td>
+                <td>ETH {{ user.balance_eth }}</td>
+            </tr>
+        </tbody>
+        </table>
+    </div>
+
 </div>
 
 <script src="../static/javascript/live.js"></script>
