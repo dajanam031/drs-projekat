@@ -3,12 +3,13 @@ from operator import or_, and_
 import requests
 from flask import Blueprint, jsonify
 import flask
-from database.models import User, Card, Transaction, Session, engine
+from database.models import User,  Transaction, Session, engine
 from werkzeug.security import check_password_hash, generate_password_hash
 import sha3
 import random
 import threading
 import time
+from database.enums import Card
 
 user_blueprint = Blueprint('user_blueprint', __name__)
 
@@ -102,23 +103,24 @@ def verification():
     securitycode=data['securitycode']
     user_email = data['user_email']
 
+    
+    if not cardnumber == Card.CARD_NUM.value:
+        err = {'message' : 'Invalid card number.Try again.'}, 400
+        return err
+    elif not expirydate == Card.EXPIRY_DATE.value:
+        err = {'message' : 'Invalid expiry date.Try again.'}, 400
+        return err
+    elif not securitycode == Card.SECURITY_CODE.value:
+        err = {'message' : 'Invalid security code. Try again.'}, 400
+        return err
+
     localSession = Session(bind=engine)
 
     user_to_verify = localSession.query(User).filter(User.email==user_email).first()
-    
-    existing_cardnumber = localSession.query(Card).filter(Card.cardnumber == cardnumber).first()
-    if existing_cardnumber:
-        err = {'message' : 'Invalid card number.'}, 400
-        return err
-
     user_to_verify.verified = True
-
-    new_card = Card(cardnumber=cardnumber, clientname=clientname, expirydate=expirydate,
-    securitycode=securitycode, user_id = user_to_verify.id)
 
     user_to_verify.balance += 1
 
-    localSession.add(new_card)
     localSession.commit()
     return updateUserInSession(user_to_verify, localSession)
 
@@ -164,20 +166,6 @@ def transferMoneyToMyAcc():
 
     return success
 
-@user_blueprint.route('/getCard', methods=['POST'])
-def getCard():
-    data = flask.request.json
-    email = data['email']
-
-    localSession = Session(bind=engine)
-    user = localSession.query(User).filter(User.email==email).first()
-    card = localSession.query(Card).filter(Card.user_id==user.id).first()
-    localSession.close()
-
-    resp = {'cardNumber' : card.cardnumber, 'expiryDate' : card.expirydate}
-
-    return resp
-
 @user_blueprint.route('/transactionsHistory', methods=['POST'])
 def transactionsHistory():
     data = flask.request.json
@@ -208,6 +196,7 @@ def changeCurrency():
     user=localSession.query(User).filter(User.email==email).first()
     if(amount>user.balance):
          err = {'message' : 'You dont have enough $$$'}, 400
+         localSession.close()
          return err
     else:
         if(currency=='bitcoin'):
@@ -222,18 +211,9 @@ def changeCurrency():
         elif(currency=='ethereum'):
             user.balance-=amount
             user.balance_eth+=amount/float(prices['ethereum']['usd'])
-        success = {'firstname': user.firstname, 'lastname': user.lastname, 'address': user.address, 'city': user.city,
-                   'country': user.country, 'phoneNum': user.phoneNumber, 'email': user.email,
-                   'password': user.password,
-                   'balance': user.balance, 'verified': user.verified,'balance_btc':user.balance_btc,'balance_ltc':user.balance_ltc,
-                   'balance_doge':user.balance_doge,'balance_eth':user.balance_eth}, 200
         localSession.commit()
-        localSession.close()
-        return  success
-
-
-
-
+        
+        return updateUserInSession(user, localSession)
 
 
 ############################################ POMOCNE FUNKCIJE #########################################################

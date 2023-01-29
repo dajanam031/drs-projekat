@@ -110,18 +110,11 @@ def verification():
     if request.method == 'GET':
       return render_template('verification.html')
     else:
-        #TODO:
-        # izvrsiti provere jel cardNumber u formatu 4242 4242 4242 4242 (nzm mora li)
-        # izvrsiti proveru jel securityCode duzine tacno 3 cifre kao i inace kod kartica (isto nzm mora li)
-     
         cardnumber=request.form['cardnumber']
         clientname = request.form['clientname']
-        #expirydate = datetime.datetime.strptime(expirydate, '%m/%d/%Y')
-        #expirydate_iso = expirydate.isoformat()
         expirydate=request.form['expirydate']
         securitycode=request.form['securitycode']
 
-        
         email = session['user']['email']
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
         data = json.dumps({'cardnumber' : cardnumber, 'clientname' : clientname, 'expirydate' : expirydate, 'securitycode' : securitycode,
@@ -177,24 +170,10 @@ def balance():
 @verified_required
 def toMyAccount():
     if request.method == 'GET':
-        email = session['user']['email']
-
-        headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
-        data = json.dumps({'email' : email})
-        req = requests.post("http://127.0.0.1:5001/engine/getCard", data=data, headers=headers)
-        resp = (req.json())
-        cardNum = resp['cardNumber']
-        expDate = resp['expiryDate']
-
-        return render_template('toMyAccount.html', cardNum=cardNum, expDate=expDate)
+        return render_template('toMyAccount.html')
     else:
         amount = request.form['amount']
         email = session['user']['email']
-        
-        amount_str = str(amount).strip()
-        if not len(amount_str): # nista nije uneseno
-            flash('Neispravno unet iznos novca. Pokusajte ponovo')
-            return redirect(url_for('toMyAccount'))
         
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
         data = json.dumps({'email' : email, 'amount' : amount})

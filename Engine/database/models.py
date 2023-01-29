@@ -1,5 +1,5 @@
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from sqlalchemy import Boolean, Column, ForeignKey, String, Integer, Float, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Boolean, Column, String, Integer, Float, create_engine
 import os
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))# kreirace bazu u folderu database
@@ -8,15 +8,6 @@ Base = declarative_base()
 engine = create_engine(conn_string, echo=True)
 Session = sessionmaker()
 
-class Card(Base):
-    __tablename__ = 'cards'
-    id = Column(Integer(), primary_key=True)
-    cardnumber=Column(String(50), nullable=False, unique=True)
-    clientname = Column(String(50), nullable=False)
-    expirydate = Column(String(50), nullable=False)
-    securitycode = Column(String(50), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('User', back_populates='card')
 
 class User(Base):
     __tablename__  = 'users'
@@ -35,7 +26,6 @@ class User(Base):
     balance_doge=Column(Float,default=0)
     balance_eth=Column(Float,default=0)
     verified = Column(Boolean, default=False)
-    card = relationship('Card', back_populates='user')
 
 class Transaction(Base):
     __tablename__ = 'transactions'

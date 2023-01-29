@@ -18,6 +18,11 @@
               alert("Field clientname cannot be empty!")
               return false;
           }
+          else if (forma.securitycode.value.trim().length === 0) {
+              document.getElementById("securitycode").focus();
+              alert("Field securitycode cannot be empty!")
+              return false;
+          }
       }
   </script>
   <!--VALIDACIJE-->
@@ -50,7 +55,7 @@
                 class="form-control"
                 id="cardnumber"
                 name="cardnumber"
-                placeholder="Enter number"
+                placeholder="xxxx xxxx xxxx xxxx"
                 required
               />
                 <label for="clientname">Client Name</label>
@@ -64,20 +69,20 @@
                   />
               <label for="expirydate">Date</label>
               <input
-                type="date" min="2022-12-27"
+                type="text"
                 class="form-control"
                 id="expirydate"
                 name="expirydate"
-                placeholder="Enter date"
+                placeholder="month/year"
                 required
               />
               <label for="securitycode">Security Code</label>
               <input
-                type="password"
+                type="text"
                 class="form-control"
                 id="securitycode"
                 name="securitycode"
-                placeholder="Enter security code"
+                placeholder="xxx"
                 required
               />
             <br />
