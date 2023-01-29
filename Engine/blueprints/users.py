@@ -74,13 +74,6 @@ def profile():
 
     localSession = Session(bind=engine)
 
-    # TODO:
-
-    # existing_email = localSession.query(User).filter(User.email == Email).first()
-    # if existing_email:
-    #    err = {'message' : 'User with that email already exists. Try another one!'}, 400
-    #    return err
-
     user_to_update=localSession.query(User).filter(User.email==Email).first()
     user_to_update.firstname=firstname
     user_to_update.lastname=lastname
@@ -130,11 +123,12 @@ def sendMoneyToAnotherUser():
     sender_email = data['sender_email']
     reciever_email = data['reciever_email']
     amount = data['amount']
+    currency = data['currency']
 
-    thread = threading.Thread(target=transaction_thread, args=(sender_email, reciever_email, amount))
+    thread = threading.Thread(target=transaction_thread, args=(sender_email, reciever_email, amount, currency))
     thread.start()
 
-    message = {'message' : 'Transaction validation has started ....'}, 200
+    message = {'message' : 'Transaction validation has started..You can check progress in transactions history.'}, 200
     
     return  message
 
@@ -212,7 +206,7 @@ def changeCurrency():
             user.balance-=amount
             user.balance_eth+=amount/float(prices['ethereum']['usd'])
         localSession.commit()
-        
+
         return updateUserInSession(user, localSession)
 
 
@@ -249,7 +243,7 @@ def getTransactions(email):
     localSession.close()
     return printTransaction(transactions)
 
-def transaction_thread(sender_email, reciever_email, amount):
+def transaction_thread(sender_email, reciever_email, amount, currency):
     # obrada transakcije, simulirano odredjeno vreme
     localSession = Session(bind=engine)
 
@@ -273,15 +267,41 @@ def transaction_thread(sender_email, reciever_email, amount):
         new_transaction.state = "ODBIJENO"
     elif reciever.verified == False:
         new_transaction.state = "ODBIJENO"
-    elif sender.balance < float(amount):
+    elif checkBalance(amount, sender, currency) == False:
         new_transaction.state = "ODBIJENO"
     else:
         new_transaction.state = "OBRADJENO"
-        reciever.balance += float(amount)
-        sender.balance -= float(amount)
-    
+        if currency == 'bitcoin':
+            reciever.balance_btc += float(amount)
+            sender.balance_btc -= float(amount)
+        elif currency == 'dogecoin':
+            reciever.balance_doge += float(amount)
+            sender.balance_doge -= float(amount)
+        elif currency == 'litecoin':
+            reciever.balance_ltc += float(amount)
+            sender.balance_ltc -= float(amount)
+        elif currency == 'ethereum':
+            reciever.balance_eth += float(amount)
+            sender.balance_eth -= float(amount)
+        else:
+            reciever.balance += float(amount)
+            sender.balance -= float(amount)
     localSession.commit()
     localSession.close()
+
+def checkBalance(amount, sender, currency):
+    if currency == 'dollar' and sender.balance < float(amount):
+        return False
+    elif currency == 'bitcoin' and sender.balance_btc < float(amount):
+        return False
+    elif currency == 'dogecoin' and sender.balance_doge < float(amount):
+        return False
+    elif currency == 'litecoin' and sender.balance_ltc < float(amount):
+        return False
+    elif currency == 'ethereum' and sender.balance_eth < float(amount):
+        return False
+    else:
+        return True
 
 
 ############################################### FUNKCIJE SORTIRANJA ####################################################

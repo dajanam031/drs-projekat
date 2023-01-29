@@ -37,7 +37,7 @@
         placeholder="Enter email"
         required
       />
-      <label for="amount">Kolicina novca (u $)</label>
+      <label for="amount">Kolicina novca</label>
       <input
         type="number"
         step="any"
@@ -47,6 +47,14 @@
         placeholder="Enter amount"
         required
       />
+      <label for="currency">Valuta</label>
+      <select id="currency" name="currency">
+        <option value="dollar">DOLAR</option>
+        <option value="bitcoin">BITCOIN</option>
+        <option value="dogecoin">DOGECOIN</option>
+        <option value="litecoin">LITECOIN</option>
+        <option value="ethereum">ETHEREUM</option>
+      </select>
     <br />
     <button type="submit">Send</button>
   </form>

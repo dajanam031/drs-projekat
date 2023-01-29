@@ -139,9 +139,11 @@ def toAnotherUser():
         reciever_email = request.form['email']
         amount = request.form['amount']
         sender_email = session['user']['email']
-        
+        currency = request.form['currency']
+
         headers = {'Content-type' : 'application/json', 'Accept': 'text/plain'}
-        data = json.dumps({'sender_email' : sender_email, 'reciever_email' : reciever_email, 'amount' : amount})
+        data = json.dumps({'sender_email' : sender_email, 'reciever_email' : reciever_email,
+        'amount' : amount, 'currency' : currency})
         req = requests.post("http://127.0.0.1:5001/engine/sendMoneyToAnotherUser", data=data, headers=headers)
 
         resp = (req.json())
