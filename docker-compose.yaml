@@ -1,0 +1,7 @@
+services:
+  engine:
+    build: ./Engine
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./Engine:/backend
