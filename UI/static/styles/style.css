@@ -316,3 +316,14 @@ tr:nth-child(even){
 .error{
     background-color: red;
 }
+
+.transactions ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+.transactions  li {
+    padding: 10px;
+    background-color: black;
+    margin-left: 300px;
+  }

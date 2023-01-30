@@ -153,6 +153,14 @@ def transferMoneyToMyAcc():
 
     user.balance += float(amount)
 
+    hashString = (email + str(amount) + str(random.randint(0,1000))).encode('ascii')
+    keccak256 = sha3.keccak_256()
+    keccak256.update(hashString)
+
+    new_transaction = Transaction(transaction_hash=keccak256.hexdigest(), 
+    sender=email, reciever="ADD MONEY", amount=amount, state="OBRADJENO")
+    localSession.add(new_transaction) 
+
     localSession.commit()
     localSession.close()
 
@@ -205,6 +213,14 @@ def changeCurrency():
         elif(currency=='ethereum'):
             user.balance-=amount
             user.balance_eth+=amount/float(prices['ethereum']['usd'])
+
+        hashString = (email + str(amount) + str(random.randint(0,1000))).encode('ascii')
+        keccak256 = sha3.keccak_256()
+        keccak256.update(hashString)
+
+        new_transaction = Transaction(transaction_hash=keccak256.hexdigest(), 
+        sender=email, reciever="EXCHANGE MONEY", amount=amount, currency = currency, state="OBRADJENO")
+        localSession.add(new_transaction) 
         localSession.commit()
 
         return updateUserInSession(user, localSession)
@@ -225,12 +241,13 @@ def updateUserInSession(user, session):
     session.close()
     return success
 
-def printTransaction(transactions):
+def printTransaction(transactions, session):
     # možda napraviti drugaciji ispis
     resp = []
     for tr in transactions:
-        transaction = "SENDER: " + tr.sender + " , " + "RECIEVER: " + tr.reciever + " , " + "AMOUNT: " + str(tr.amount) + "$" + " , " + tr.state
+        transaction = tr.sender + " --> " + tr.reciever + " , " + "AMOUNT: " + str(tr.amount)+ " , " + "CURRENCY: " + tr.currency + " , " + tr.state
         resp.append(transaction)
+    session.close()
     return jsonify(resp)
 
 def getTransactions(email):
@@ -240,8 +257,7 @@ def getTransactions(email):
             .filter(or_(Transaction.sender == email, Transaction.reciever == email))
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def transaction_thread(sender_email, reciever_email, amount, currency):
     # obrada transakcije, simulirano odredjeno vreme
@@ -328,8 +344,7 @@ def sortbyAmountAsc(email):
             .order_by(Transaction.amount)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def sortbyAmountDesc(email):
     localSession = Session(bind=engine)
@@ -339,8 +354,7 @@ def sortbyAmountDesc(email):
             .order_by(Transaction.amount.desc())
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def sortbySenderAZ(email):
     localSession = Session(bind=engine)
@@ -350,8 +364,7 @@ def sortbySenderAZ(email):
             .order_by(Transaction.sender)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def sortbySenderZA(email):
     localSession = Session(bind=engine)
@@ -361,8 +374,7 @@ def sortbySenderZA(email):
             .order_by(Transaction.sender.desc())
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def sortbyRecieverZA(email):
     localSession = Session(bind=engine)
@@ -372,8 +384,7 @@ def sortbyRecieverZA(email):
             .order_by(Transaction.reciever.desc())
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def sortbyRecieverAZ(email):
     localSession = Session(bind=engine)
@@ -383,8 +394,7 @@ def sortbyRecieverAZ(email):
             .order_by(Transaction.reciever)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 
 ######################################################################################################################
@@ -429,8 +439,7 @@ def filterByAllParams(senderFilter, recieverFilter, amountFilter, email):
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterByAmountAndSender(amountFilter, senderFilter, email):
     # filtriranje po kolicini novca i posiljaocu
@@ -441,8 +450,7 @@ def filterByAmountAndSender(amountFilter, senderFilter, email):
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterByAmountAndReciever(amountFilter, recieverFilter, email):
     # filtriranje po kolicini novca i primaocu
@@ -453,8 +461,7 @@ def filterByAmountAndReciever(amountFilter, recieverFilter, email):
             .filter(Transaction.reciever.like(f'%{recieverFilter}%'), Transaction.amount == amountFilter)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterBySenderAndReciever(senderFilter, recieverFilter, email):
     # filtriranje po primaocu i posiljaocu
@@ -465,8 +472,7 @@ def filterBySenderAndReciever(senderFilter, recieverFilter, email):
             .filter(Transaction.sender.like(f'%{senderFilter}%'), Transaction.reciever.like(f'%{recieverFilter}%'))
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterByAmount(amountFilter, email):
     # filtriranje samo po kolicini novca
@@ -477,8 +483,7 @@ def filterByAmount(amountFilter, email):
             .filter(Transaction.amount == amountFilter)
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterBySender(senderFilter, email):
     # filtriranje po posiljaocu
@@ -489,8 +494,7 @@ def filterBySender(senderFilter, email):
             .filter(Transaction.sender.like(f'%{senderFilter}%'))
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 
 def filterByReciever(recieverFilter, email):
     # filtriranje po primaocu
@@ -501,8 +505,7 @@ def filterByReciever(recieverFilter, email):
             .filter(Transaction.reciever.like(f'%{recieverFilter}%'))
             .all()
         )
-    localSession.close()
-    return printTransaction(transactions)
+    return printTransaction(transactions, localSession)
 ######################################################################################################################
     
 

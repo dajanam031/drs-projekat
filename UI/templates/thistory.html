@@ -27,7 +27,8 @@
   </div>
   
 <h1>Istorija transakcija</h1>
-<ul>
+<div class="transactions">
+    <ul>
     {% if not transactions %}
         <h3>Nemate transakcija</h3>
     {%else%}
@@ -35,6 +36,7 @@
             <br>
             <li>{{tr}}</li>
         {%endfor%}
+      </div>
         <div class="form-sort">
           <h1>SORTIRANJE</h1>
         <form action="/thistory" method="GET">

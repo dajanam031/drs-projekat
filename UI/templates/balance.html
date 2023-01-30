@@ -99,22 +99,30 @@
                 <td>Dollars</td>
                 <td>${{ user.balance }}</td>
             </tr>
+            {% if user.balance_btc > 0 %}
             <tr>
                 <td>Bitcoin</td>
                 <td>BTC {{ user.balance_btc }}</td>
             </tr>
+            {%endif%}
+            {% if user.balance_ltc > 0 %}
             <tr>
                 <td>Litecoin</td>
                 <td>LTC {{ user.balance_ltc }}</td>
             </tr>
+            {%endif%}
+            {% if user.balance_doge > 0 %}
             <tr>
                 <td>Dogecoin</td>
                 <td>DOGE {{ user.balance_doge }}</td>
             </tr>
+            {%endif%}
+            {% if user.balance_eth > 0 %}
             <tr>
                 <td>Ethereum</td>
                 <td>ETH {{ user.balance_eth }}</td>
             </tr>
+            {%endif%}
         </tbody>
         </table>
     </div>

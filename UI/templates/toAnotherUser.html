@@ -50,10 +50,18 @@
       <label for="currency">Valuta</label>
       <select id="currency" name="currency">
         <option value="dollar">DOLAR</option>
+        {% if user.balance_btc > 0 %}
         <option value="bitcoin">BITCOIN</option>
+        {%endif%}
+        {% if user.balance_doge > 0 %}
         <option value="dogecoin">DOGECOIN</option>
+        {%endif%}
+        {% if user.balance_ltc > 0 %}
         <option value="litecoin">LITECOIN</option>
+        {%endif%}
+        {% if user.balance_eth > 0 %}
         <option value="ethereum">ETHEREUM</option>
+        {%endif%}
       </select>
     <br />
     <button type="submit">Send</button>
