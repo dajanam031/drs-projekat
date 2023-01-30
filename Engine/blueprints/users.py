@@ -1,4 +1,4 @@
-from operator import or_, and_
+from operator import or_
 
 import requests
 from flask import Blueprint, jsonify
@@ -10,8 +10,10 @@ import random
 import threading
 import time
 from database.enums import Card
+from multiprocessing import Queue
 
 user_blueprint = Blueprint('user_blueprint', __name__)
+transaction_queue = Queue()
 
 @user_blueprint.route('/signup', methods=['POST'])
 def signup():
@@ -259,6 +261,44 @@ def getTransactions(email):
         )
     return printTransaction(transactions, localSession)
 
+def transaction_process(queue : Queue):
+    while True:
+        t = queue.get()
+        localSession = Session(bind=engine)
+        localSession.add(t)
+        transaction = localSession.query(Transaction).filter(Transaction.transaction_hash==t.transaction_hash).first()
+        reciever = localSession.query(User).filter(User.email==transaction.reciever).first()
+        sender = localSession.query(User).filter(User.email==transaction.sender).first()
+
+        if transaction.sender == transaction.reciever:
+            transaction.state = "ODBIJENO"
+        elif not reciever:
+            transaction.state = "ODBIJENO"
+        elif reciever.verified == False:
+            transaction.state = "ODBIJENO"
+        elif checkBalance(transaction.amount, sender, transaction.currency) == False:
+            transaction.state = "ODBIJENO"
+        else:
+            transaction.state = "OBRADJENO"
+            if transaction.currency == 'bitcoin':
+                reciever.balance_btc += float(transaction.amount)
+                sender.balance_btc -= float(transaction.amount)
+            elif transaction.currency == 'dogecoin':
+                reciever.balance_doge += float(transaction.amount)
+                sender.balance_doge -= float(transaction.amount)
+            elif transaction.currency == 'litecoin':
+                reciever.balance_ltc += float(transaction.amount)
+                sender.balance_ltc -= float(transaction.amount)
+            elif transaction.currency == 'ethereum':
+                reciever.balance_eth += float(transaction.amount)
+                sender.balance_eth -= float(transaction.amount)
+            else:
+                reciever.balance += float(transaction.amount)
+                sender.balance -= float(transaction.amount)
+        localSession.commit()
+        localSession.refresh(t)
+        localSession.close()
+
 def transaction_thread(sender_email, reciever_email, amount, currency):
     # obrada transakcije, simulirano odredjeno vreme
     localSession = Session(bind=engine)
@@ -268,42 +308,12 @@ def transaction_thread(sender_email, reciever_email, amount, currency):
     keccak256.update(hashString)
 
     new_transaction = Transaction(transaction_hash=keccak256.hexdigest(), 
-    sender=sender_email, reciever=reciever_email, amount=amount, state="U OBRADI")
+    sender=sender_email, reciever=reciever_email, amount=amount, currency = currency, state="U OBRADI")
     localSession.add(new_transaction) 
     localSession.commit()
 
     time.sleep(15)
-    
-    reciever = localSession.query(User).filter(User.email==reciever_email).first()
-    sender = localSession.query(User).filter(User.email==sender_email).first()
-
-    if sender_email == reciever_email:
-        new_transaction.state = "ODBIJENO"
-    elif not reciever:
-        new_transaction.state = "ODBIJENO"
-    elif reciever.verified == False:
-        new_transaction.state = "ODBIJENO"
-    elif checkBalance(amount, sender, currency) == False:
-        new_transaction.state = "ODBIJENO"
-    else:
-        new_transaction.state = "OBRADJENO"
-        if currency == 'bitcoin':
-            reciever.balance_btc += float(amount)
-            sender.balance_btc -= float(amount)
-        elif currency == 'dogecoin':
-            reciever.balance_doge += float(amount)
-            sender.balance_doge -= float(amount)
-        elif currency == 'litecoin':
-            reciever.balance_ltc += float(amount)
-            sender.balance_ltc -= float(amount)
-        elif currency == 'ethereum':
-            reciever.balance_eth += float(amount)
-            sender.balance_eth -= float(amount)
-        else:
-            reciever.balance += float(amount)
-            sender.balance -= float(amount)
-    localSession.commit()
-    localSession.close()
+    transaction_queue.put(new_transaction)
 
 def checkBalance(amount, sender, currency):
     if currency == 'dollar' and sender.balance < float(amount):

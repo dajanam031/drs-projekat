@@ -177,7 +177,7 @@ h4, h6{
 .form-filter{
     width: 350px;
     top: 70%;
-    left: 70%;
+    left: 80%;
     transform: translate(-50%, -50%);
     position: absolute;
     color: #fff;
@@ -323,7 +323,7 @@ tr:nth-child(even){
     margin: 0;
   }
 .transactions  li {
-    padding: 10px;
+    padding: 4px;
     background-color: black;
-    margin-left: 300px;
+    margin-left: 200px;
   }

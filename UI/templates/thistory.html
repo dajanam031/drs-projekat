@@ -25,18 +25,16 @@
       {%endif%}
     </ul>
   </div>
-  
-<h1>Istorija transakcija</h1>
-<div class="transactions">
-    <ul>
+<ul class="transactions">
     {% if not transactions %}
         <h3>Nemate transakcija</h3>
     {%else%}
         {% for tr in transactions %}
             <br>
-            <li>{{tr}}</li>
+            <li class="transactions">{{tr}}</li>
         {%endfor%}
-      </div>
+        
+</ul>
         <div class="form-sort">
           <h1>SORTIRANJE</h1>
         <form action="/thistory" method="GET">
@@ -68,7 +66,6 @@
         </form>
         </div>
     {%endif%}
-</ul>
 </div>
 </body>
 </html>
