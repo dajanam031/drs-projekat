@@ -7,6 +7,19 @@
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
 <body>
+    <script type="text/javascript">
+        function proveraZamena(forma) {
+            if (!isFloat(forma.amount.value.trim())) {
+                document.getElementById("amount").focus();
+                alert("Field amount must be integer or float!")
+                return false;
+            }
+        }
+        function isFloat(str) {
+            let parsed = parseFloat(str);
+            return !isNaN(parsed) && parsed === +str;
+}
+    </script>
 {% set user=session['user']%}
 <div class="banner">
     <div class="navbar">
@@ -28,7 +41,7 @@
       </div>
       <div class="form-change">
         <h1>ZAMENA</h1>
-      <form action="/changeCurrency" method="POST">
+      <form action="/changeCurrency" method="POST" onsubmit="return proveraZamena(this)">
           <label for="change_currency">Zameni valutu:</label><br>
           <select id="change_currency" name="change_currency">
             <option value="bitcoin">BITCOIN</option>

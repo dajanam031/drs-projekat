@@ -84,7 +84,8 @@ def profile():
     user_to_update.country=country
     user_to_update.phoneNumber=phoneNum
     user_to_update.email=Email
-    user_to_update.password=generate_password_hash(password, method='sha256')
+    if len(password.strip()):
+        user_to_update.password=generate_password_hash(password, method='sha256')
     localSession.commit()
   
     return updateUserInSession(user_to_update, localSession) # pamtile su se izmene samo u bazi
